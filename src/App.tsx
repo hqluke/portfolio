@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRightIcon, MailIcon, MapPinIcon } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+    ArrowUpRightIcon,
+    DownloadIcon,
+    MailIcon,
+    MapPinIcon,
+    MoonIcon,
+    SunIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +17,19 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { contact, profile, projects, type Link } from "@/data";
+import {
+    contact,
+    education,
+    experience,
+    profile,
+    projects,
+    skills,
+    type Link,
+} from "@/data";
 
-const TABS = ["about", "projects"] as const;
+const TABS = ["about", "projects", "resume"] as const;
 type Tab = (typeof TABS)[number];
 
 const readHash = (): Tab => {
@@ -48,6 +64,94 @@ function ExternalLink({ link }: { link: Link }) {
     );
 }
 
+const savedTheme = () => {
+    try {
+        return localStorage.getItem("theme");
+    } catch {
+        return null;
+    }
+};
+
+// follows the OS setting until clicked, then remembers the choice
+function ThemeToggle() {
+    const [dark, setDark] = useState(() =>
+        document.documentElement.classList.contains("dark"),
+    );
+
+    useEffect(() => {
+        document.documentElement.classList.toggle("dark", dark);
+    }, [dark]);
+
+    useEffect(() => {
+        const media = matchMedia("(prefers-color-scheme: dark)");
+        const onChange = (e: MediaQueryListEvent) => {
+            if (!savedTheme()) setDark(e.matches);
+        };
+        media.addEventListener("change", onChange);
+        return () => media.removeEventListener("change", onChange);
+    }, []);
+
+    const toggle = () => {
+        setDark(!dark);
+        try {
+            localStorage.setItem("theme", dark ? "light" : "dark");
+        } catch {}
+    };
+
+    return (
+        <Button
+            variant="ghost"
+            className="-mr-2"
+            size="icon"
+            onClick={toggle}
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+            {dark ? <SunIcon /> : <MoonIcon />}
+        </Button>
+    );
+}
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+    return (
+        <section className="space-y-4">
+            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+                {title}
+            </h2>
+            {children}
+        </section>
+    );
+}
+
+function ResumeEntry(props: {
+    title: string;
+    subtitle?: string;
+    dates: string;
+    link?: Link;
+    bullets: string[];
+}) {
+    return (
+        <div className="space-y-2">
+            <div className="flex flex-col gap-x-4 sm:flex-row sm:items-baseline sm:justify-between">
+                <h3 className="font-semibold">{props.title}</h3>
+                <span className="shrink-0 text-sm text-muted-foreground">
+                    {props.dates}
+                </span>
+            </div>
+            {props.subtitle && (
+                <p className="text-sm text-muted-foreground">
+                    {props.subtitle}
+                </p>
+            )}
+            {props.link && <ExternalLink link={props.link} />}
+            <ul className="list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+                {props.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
 function App() {
     const [tab, setTab] = useState(readHash);
 
@@ -60,19 +164,22 @@ function App() {
     return (
         <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
             <header className="space-y-4">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                        {profile.name}
-                    </h1>
-                    <p className="text-lg text-muted-foreground">
-                        {profile.headline}
-                    </p>
-                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPinIcon className="size-3.5" />
-                        {profile.location}
-                    </p>
+                <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+                            {profile.name}
+                        </h1>
+                        <p className="text-lg text-muted-foreground">
+                            {profile.headline}
+                        </p>
+                        <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <MapPinIcon className="size-3.5" />
+                            {profile.location}
+                        </p>
+                    </div>
+                    <ThemeToggle />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                     <Button variant="outline" size="sm" asChild>
                         <a
                             href={contact.github}
@@ -99,6 +206,15 @@ function App() {
                             Email
                         </a>
                     </Button>
+                    <Button variant="outline" size="sm" asChild>
+                        <a
+                            href={`${import.meta.env.BASE_URL}Luke-Peterson-Resume.pdf`}
+                            download="Luke Peterson Resume.pdf"
+                        >
+                            <DownloadIcon />
+                            Resume
+                        </a>
+                    </Button>
                 </div>
             </header>
 
@@ -107,12 +223,15 @@ function App() {
                 onValueChange={(value) => (location.hash = value)}
                 className="mt-10"
             >
-                <TabsList className="grid w-full grid-cols-2 sm:w-fit">
+                <TabsList className="grid w-full grid-cols-3 sm:w-fit">
                     <TabsTrigger value="about" className="sm:px-4">
                         About
                     </TabsTrigger>
                     <TabsTrigger value="projects" className="sm:px-4">
                         Projects
+                    </TabsTrigger>
+                    <TabsTrigger value="resume" className="sm:px-4">
+                        Resume
                     </TabsTrigger>
                 </TabsList>
 
@@ -130,6 +249,13 @@ function App() {
                             className="font-medium underline underline-offset-4"
                         >
                             Projects
+                        </a>{" "}
+                        tab, or my full experience on the{" "}
+                        <a
+                            href="#resume"
+                            className="font-medium underline underline-offset-4"
+                        >
+                            Resume
                         </a>{" "}
                         tab. The best way to reach me is{" "}
                         <a
@@ -178,6 +304,64 @@ function App() {
                             </Card>
                         ))}
                     </div>
+                </TabsContent>
+                <TabsContent value="resume" className="mt-6 space-y-10">
+                    <Section title="Education">
+                        <div className="space-y-1">
+                            <div className="flex flex-col gap-x-4 sm:flex-row sm:items-baseline sm:justify-between">
+                                <h3 className="font-semibold">
+                                    {education.school}
+                                </h3>
+                                <span className="shrink-0 text-sm text-muted-foreground">
+                                    {education.dates}
+                                </span>
+                            </div>
+                            <p className="text-sm">
+                                {education.degree} · GPA {education.gpa}
+                            </p>
+                        </div>
+                    </Section>
+                    <Separator />
+                    <Section title="Skills">
+                        <dl className="space-y-3 text-sm">
+                            {skills.map((s) => (
+                                <div key={s.label} className="sm:flex sm:gap-4">
+                                    <dt className="font-medium sm:w-40 sm:shrink-0">
+                                        {s.label}
+                                    </dt>
+                                    <dd className="text-muted-foreground">
+                                        {s.items.join(", ")}
+                                    </dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </Section>
+                    <Separator />
+                    <Section title="Experience">
+                        {experience.map((j) => (
+                            <ResumeEntry
+                                key={j.org}
+                                title={`${j.title}, ${j.org}`}
+                                dates={j.dates}
+                                link={j.link}
+                                bullets={j.bullets}
+                            />
+                        ))}
+                    </Section>
+                    <Separator />
+                    <Section title="Projects">
+                        <div className="space-y-6">
+                            {projects.map((p) => (
+                                <ResumeEntry
+                                    key={p.name}
+                                    title={p.name}
+                                    subtitle={p.role}
+                                    dates={p.dates}
+                                    bullets={p.bullets}
+                                />
+                            ))}
+                        </div>
+                    </Section>
                 </TabsContent>
             </Tabs>
         </main>

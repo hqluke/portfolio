@@ -7,8 +7,21 @@
         <title>Luke Peterson</title>
         <meta
             name="description"
-            content="Luke Peterson - Computer Science senior at Weber State University."
+            content="Luke Peterson - Computer Science senior at Weber State University. Projects, resume, and contact."
         />
+        <script>
+            // set the theme before first paint so dark mode doesn't flash white
+            let theme = null;
+            try {
+                theme = localStorage.getItem("theme");
+            } catch {}
+            document.documentElement.classList.toggle(
+                "dark",
+                theme
+                    ? theme === "dark"
+                    : matchMedia("(prefers-color-scheme: dark)").matches,
+            );
+        </script>
     </head>
     <body>
         <div id="root"></div>
