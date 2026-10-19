@@ -1,6 +1,25 @@
-import { MailIcon, MapPinIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowUpRightIcon, MailIcon, MapPinIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { contact, profile } from "@/data";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { contact, profile, projects, type Link } from "@/data";
+
+const TABS = ["about", "projects"] as const;
+type Tab = (typeof TABS)[number];
+
+const readHash = (): Tab => {
+    const hash = location.hash.slice(1);
+    return TABS.includes(hash as Tab) ? (hash as Tab) : "about";
+};
 
 // lucide dropped brand icons, so these two are inline (paths from simple-icons)
 const GitHubIcon = () => (
@@ -15,7 +34,29 @@ const LinkedInIcon = () => (
     </svg>
 );
 
+function ExternalLink({ link }: { link: Link }) {
+    return (
+        <a
+            href={link.href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-0.5 text-sm font-medium underline-offset-4 hover:underline"
+        >
+            {link.label}
+            <ArrowUpRightIcon className="size-3.5" />
+        </a>
+    );
+}
+
 function App() {
+    const [tab, setTab] = useState(readHash);
+
+    useEffect(() => {
+        const onHashChange = () => setTab(readHash());
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
     return (
         <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
             <header className="space-y-4">
@@ -61,13 +102,36 @@ function App() {
                 </div>
             </header>
 
-            <div className="mt-10">
-                <div className="space-y-4 leading-relaxed">
+            <Tabs
+                value={tab}
+                onValueChange={(value) => (location.hash = value)}
+                className="mt-10"
+            >
+                <TabsList className="grid w-full grid-cols-2 sm:w-fit">
+                    <TabsTrigger value="about" className="sm:px-4">
+                        About
+                    </TabsTrigger>
+                    <TabsTrigger value="projects" className="sm:px-4">
+                        Projects
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent
+                    value="about"
+                    className="mt-6 space-y-4 leading-relaxed"
+                >
                     {profile.bio.map((p) => (
                         <p key={p}>{p}</p>
                     ))}
                     <p>
-                        The best way to reach me is{" "}
+                        See what I've built on the{" "}
+                        <a
+                            href="#projects"
+                            className="font-medium underline underline-offset-4"
+                        >
+                            Projects
+                        </a>{" "}
+                        tab. The best way to reach me is{" "}
                         <a
                             href={`mailto:${contact.email}`}
                             className="font-medium underline underline-offset-4"
@@ -76,8 +140,46 @@ function App() {
                         </a>
                         .
                     </p>
-                </div>
-            </div>
+                </TabsContent>
+
+                <TabsContent value="projects" className="mt-6">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {projects.map((p) => (
+                            <Card key={p.name} className="gap-4">
+                                <CardHeader>
+                                    <CardTitle>{p.name}</CardTitle>
+                                    <CardDescription>
+                                        {p.role && <p>{p.role}</p>}
+                                        <p>{p.dates}</p>
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex-1 space-y-4">
+                                    <p className="text-sm leading-relaxed">
+                                        {p.summary}
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {p.stack.map((t) => (
+                                            <Badge key={t} variant="secondary">
+                                                {t}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                                {p.links.length > 0 && (
+                                    <CardFooter className="gap-4">
+                                        {p.links.map((l) => (
+                                            <ExternalLink
+                                                key={l.href}
+                                                link={l}
+                                            />
+                                        ))}
+                                    </CardFooter>
+                                )}
+                            </Card>
+                        ))}
+                    </div>
+                </TabsContent>
+            </Tabs>
         </main>
     );
 }
