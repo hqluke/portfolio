@@ -39,6 +39,26 @@ export const education = {
     degree: "Bachelor of Science, Computer Science",
     dates: "January 2023 - December 2026 (Expected)",
     gpa: "3.56 / 4.00",
+    coursework: [
+        {
+            label: "Relevant Coursework",
+            items: [
+                "Data Structures & Algorithms",
+                "Operating Systems",
+                "Computer Architecture & Organization",
+                "Network Fundamentals & Design",
+                "Software Engineering I & II",
+                "Advanced Database Programming",
+                "Server-Side Web Architecture",
+                "Calculus I & II",
+                "Statistics",
+            ],
+        },
+        {
+            label: "In Progress (Fall 2026)",
+            items: ["Computer Science Capstone", "Human-Computer Interaction"],
+        },
+    ],
 };
 
 export const skills: { label: string; items: string[] }[] = [

@@ -122,6 +122,23 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     );
 }
 
+function LabeledList({ rows }: { rows: { label: string; items: string[] }[] }) {
+    return (
+        <dl className="space-y-3 text-sm">
+            {rows.map((r) => (
+                <div key={r.label} className="sm:flex sm:gap-4">
+                    <dt className="font-medium sm:w-40 sm:shrink-0">
+                        {r.label}
+                    </dt>
+                    <dd className="text-muted-foreground">
+                        {r.items.join(", ")}
+                    </dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
 function ResumeEntry(props: {
     title: string;
     subtitle?: string;
@@ -317,24 +334,18 @@ function App() {
                                 </span>
                             </div>
                             <p className="text-sm">
-                                {education.degree} · GPA {education.gpa}
+                                {education.degree}
+                                <span className="hidden sm:inline"> · </span>
+                                <span className="block sm:inline">
+                                    GPA {education.gpa}
+                                </span>
                             </p>
                         </div>
+                        <LabeledList rows={education.coursework} />
                     </Section>
                     <Separator />
                     <Section title="Skills">
-                        <dl className="space-y-3 text-sm">
-                            {skills.map((s) => (
-                                <div key={s.label} className="sm:flex sm:gap-4">
-                                    <dt className="font-medium sm:w-40 sm:shrink-0">
-                                        {s.label}
-                                    </dt>
-                                    <dd className="text-muted-foreground">
-                                        {s.items.join(", ")}
-                                    </dd>
-                                </div>
-                            ))}
-                        </dl>
+                        <LabeledList rows={skills} />
                     </Section>
                     <Separator />
                     <Section title="Experience">
